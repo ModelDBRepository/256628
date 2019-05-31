@@ -1,0 +1,66 @@
+TITLE transient potassium (A-) current
+
+COMMENT Equations from
+   Huguenard JR, McCormick DA (1992) Simulation of the currents involved
+   in rhythmic oscillations in thalamic relay neurons. J Neurophys 68(4):
+   1373-1383.
+
+>< Temperature adjusts time constants measured at 23.5 degC.
+>< Written by Arthur Houweling for MyFirstNEURON.
+ENDCOMMENT
+
+NEURON {
+	SUFFIX iA
+	USEION k READ ek WRITE ik 
+        RANGE gk, minf, mtau, hinf, htau, ik
+}
+
+UNITS {
+	(mA) = (milliamp)
+	(mV) = (millivolt)
+}
+
+PARAMETER {
+	v		(mV)
+	celsius		(degC)
+	ek		(mV)
+	gk= 3.45e-3	(mho/cm2)
+}
+
+STATE { m h }
+
+ASSIGNED {
+	ik	(mA/cm2)
+	mtau	(ms)
+	htau	(ms)
+	minf
+	hinf
+	tadj
+}
+
+BREAKPOINT { 
+	SOLVE states METHOD cnexp
+ 	ik= gk* m^4* h* (v- ek)
+}
+
+DERIVATIVE states { 
+	rates()
+
+	m'= (minf- m)/ mtau
+	h'= (hinf- h)/ htau
+}
+
+INITIAL { UNITSOFF
+	tadj= 3^ ((celsius- 23.5)/ 10)
+	rates()
+	m= minf
+        h= hinf
+}
+
+PROCEDURE rates() { 
+	minf= 1/ (1+exp(-(v+60)/8.5))
+	hinf= 1/ (1+ exp((v+ 78)/ 6))
+	mtau= (1/ (exp((v+ 35.82)/ 19.69)+ exp(-(v+ 79.69)/ 12.7))+ 0.37)/ tadj
+	if (v< -63) { htau= 1/ (( exp((v+ 46.05)/ 5)+ exp(-(v+ 238.4)/ 37.45)))/ tadj }
+	else { htau= 19/ tadj }
+} 
